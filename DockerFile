@@ -3,14 +3,13 @@
 # docker build -t gcr.io/fd-slack-crypto-bot/fd-slack-crypto-bot:v1 .
 # gcloud docker -- push gcr.io/fd-slack-crypto-bot/fd-slack-crypto-bot:v1
 
-# Dockerfile extending the generic Node image with application files for a
-# single application.
-FROM gcr.io/google_appengine/nodejs
+FROM node:8
 
-# Install node.js version
-RUN install_node v8.4.0
+# Create app directory
+WORKDIR /usr/src/app
 
-COPY . /app/
+# Bundle app source
+COPY . .
 
 # RUN apt-get update \
 #     && apt-get install -qq libcairo2-dev libjpeg-dev libpango1.0-dev libgif-dev build-essential g++
@@ -27,4 +26,4 @@ RUN npm install --unsafe-perm || \
       cat npm-debug.log; \
     fi) && false)
 
-CMD npm start
+CMD [ "npm", "start" ]
