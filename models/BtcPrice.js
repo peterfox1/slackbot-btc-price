@@ -104,7 +104,7 @@ class BtcPrice {
 	}
 
 	dateZeroPad(num) {
-		if (num < 9) { num = "0"+ num; }
+		if (num < 10) { num = "0"+ num; }
 		return num;
 	}
 	dateToDateString(m) {
