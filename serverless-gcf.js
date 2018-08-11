@@ -1,11 +1,13 @@
 
 // Deploy:
+// -- Normal deployment
 // gcloud beta functions deploy btcPrice --runtime nodejs8 --trigger-http
+// -- Set/Replace env vars
 // gcloud beta functions deploy btcPrice --runtime nodejs8 --trigger-http --env-vars-file .env.yaml
+
 
 require('./config.js');
 
-//const JSONc = require('circular-json');
 const CryptoMessageHandler = require(__base +'models/MessageHandlers/CryptoMessageHandler.js');
 
 
@@ -41,9 +43,6 @@ exports.btcPrice = async function(req, res) {
 		respond(req, res, responseText);
 	});
 	
-	// res.type('json');
-	// res.send(JSONc.stringify(req));
-	// res.json(req.body);
 };
 
 
