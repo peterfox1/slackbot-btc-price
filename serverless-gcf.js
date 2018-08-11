@@ -101,7 +101,7 @@ function formatSlackMessage(responseText) {
 	// See https://api.slack.com/docs/message-formatting
 	const slackMessage = {
 		response_type: 'in_channel',
-		text: responseText + 'x'
+		text: responseText
 	};
 	
 	return slackMessage;
