@@ -2,7 +2,7 @@
   "name": "slackbotpeter",
   "version": "1.0.0",
   "description": "peter test slack bot",
-  "main": "index.js",
+  "main": "serverless-gcf.js",
   "scripts": {
     "start": "node server.js"
   },
