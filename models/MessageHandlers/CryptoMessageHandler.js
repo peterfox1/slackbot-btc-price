@@ -6,27 +6,115 @@ const BtcPrice = require(__base +'models/BtcPrice.js');
 
 
 class CryptoMessageHandler extends MessageHandler {
+	
+	constructor(_opt) {
+		super(_opt);
+		this.CURRENCY_FIAT = 1;
+		this.CURRENCY_CRYPTO = 2;
+	}
 
 	async determineResponse() {
-		var words = this.text.replace("  "," ").split(" ");
-
-		// Check for btc conversion phrase "btc to usd"
-		if (words.length > 2 && words[0].toLowerCase() == 'btc' && words[1].toLowerCase() == 'to') {
-			return this.response_btcConversion({
-				from: words[0],
-				to: words[2],
-			});
+		
+		// Pre process text
+		var text = this.text.toLowerCase();
+		var words = text.split(" ");
+		// var words = text.split(" ");
+		
+		// Options to determine:
+		var parsedInput = {
+			fromAmount	: 1,
+			from		: 'btc',
+			to			: 'usd',
+		};
+		var isChart	= false;
+		
+		// Phrases: (requires from & to)
+		// "[qty] from ['to'] to ['chart']"
+		// "2 btc to usd"
+		// "btc to usd"
+		// "btc to usd chart"
+		// "btc usd"
+		// "btc usd chart"
+		
+		// Direct-only Phrases: (all paramters are optional, from and to must be in order)
+		// "[qty] [from] ['to'] [to] ['chart']"
+		// "2 btc"
+		// "btc usd chart"
+		// ""
+		// "chart"
+		
+		
+		// Helper function to safely get values from the words array
+		var getAt = function (array, index) {
+			if (index < 0) { index += array.length };	// negative index, loop round to the end of the array.
+			if (array.length == 0 || index >= array.length || index < 0) { return null; }	// safely return null if the index is out of bounds.
+			return array[index];
 		}
-
-		// Check for chart phrase "chart btc to usd"
-		if (words.length > 3 && words[0].toLowerCase() == 'chart' && words[1].toLowerCase() == 'btc' && words[2].toLowerCase() == 'to') {
-			return this.response_btcChart({
-				from: words[1],
-				to: words[3],
-			});
+		
+		
+		// Quicky filter out invalid messages (possibly not necessary)
+		if (
+			words.length > 4	// Too many words
+		) {
+			return false;
 		}
-
-		return false;
+		
+		
+		// Determine if it's a chart (default: false)
+		if (getAt(words, -1) == 'chart') {
+			// Last word is 'chart'!
+			isChart = true;
+			words.pop();
+		}
+		
+		
+		// Determine amount to convert (default: 1)
+		if (getAt(words, 0) !== null && !isNaN(getAt(words, 0))) {
+			// First 'word' is a number
+			parsedInput.fromAmount = words[0] - 0;
+			words.splice(0, 1);
+		}
+		
+		
+		// Determine conversion info
+		
+		// ..Strip 'to'
+		if (getAt(words, 1) == 'to') {
+			words.splice(1, 1);
+		}
+		
+		// ..Validate non-direct messgaes
+		if (
+			!this.isDirect
+			&&
+			!(
+				this.isValidCurrencyIso(getAt(words, 0))
+				&&
+				this.isValidCurrencyIso(getAt(words, 1))
+			)
+		) {
+			// Missing the required from & to currencies
+			return false;
+		}
+		
+		
+		// Determine from & to currencies
+		if (this.isValidCurrencyIso(getAt(words, 0))) {
+			parsedInput.from = getAt(words, 0);
+		}
+		if (this.isValidCurrencyIso(getAt(words, 1))) {
+			parsedInput.to = getAt(words, 1);
+		}
+		
+		
+		// Action the parsed input
+		
+		if (isChart) {
+			return this.response_btcChart(parsedInput);
+		}
+		
+		return this.response_btcConversion(parsedInput);
+		
 	}
 
 	async response_btcConversion(_opt) {
@@ -204,7 +292,38 @@ class CryptoMessageHandler extends MessageHandler {
 		return response;
 
 	}
+	
+	
+	/**
+	 * Validate currency ISO string
+	 * 
+	 * @param {string} currencyIso 
+	 */
+	isValidCurrencyIso(currencyIso) {
+		if (this.isValidCurrencyIso_fiat(currencyIso)) {
+			return this.CURRENCY_FIAT;
+		}
+		if (this.isValidCurrencyIso_crypto(currencyIso)) {
+			return this.CURRENCY_CRYPTO;
+		}
+		return false;
+	}
+	isValidCurrencyIso_fiat(currencyIso) {
+		var valid = {
+			'usd': 1,
+			'gbp': 1,
+			'eur': 1,
+		};
+		return (typeof(valid[currencyIso]) !== 'undefined');
+	}
+	isValidCurrencyIso_crypto(currencyIso) {
+		var valid = {
+			'btc': 1,
+		};
+		return (typeof(valid[currencyIso]) !== 'undefined');
+	}
 
+	
 	numberWithCommas(x) {
 		return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 	}
