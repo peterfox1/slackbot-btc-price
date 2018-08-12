@@ -37,7 +37,8 @@ exports.btcPrice = async function(req, res) {
 	verifyWebhook(req.body);
 	
 	var cryptoMessageHandler = new CryptoMessageHandler({
-		text: req.body.text
+		text: req.body.text,
+		isDirect: true,
 	});
 	cryptoMessageHandler.determineResponse().then(function (responseText) {
 		respond(req, res, responseText);
