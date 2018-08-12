@@ -69,7 +69,8 @@ class CryptoMessageHandler extends MessageHandler {
 		
 		
 		// Determine amount to convert (default: 1)
-		if (getAt(words, 0) !== null && !isNaN(getAt(words, 0))) {
+		var amount = getAt(words, 0);
+		if (amount !== '' && amount !== null && !isNaN(amount)) {
 			// First 'word' is a number
 			parsedInput.fromAmount = words[0] - 0;
 			words.splice(0, 1);
