@@ -31,6 +31,7 @@ class CryptoMessageHandler extends MessageHandler {
 
 	async response_btcConversion(_opt) {
 		var opt = {
+			fromAmount: 1,
 			from: 'btc',
 			to: 'usd',
 		};
@@ -46,23 +47,27 @@ class CryptoMessageHandler extends MessageHandler {
 		} catch (error) {
 			return error;
 		}
+		
+		currentPrice *= opt.fromAmount;
 
 		//currentPrice = (currentPrice.replace(',','')-0).toFixed(2);
 		currentPrice = this.numberWithCommas(currentPrice.toFixed(2));
-
+		
+		var fromAmount_str = opt.fromAmount;
 		var from_str = opt.from.toUpperCase();
 		var to_str = opt.to.toUpperCase();
 		var to_symbol = this.symbolForCurrency(opt.to);
 
-		return `*1* (${from_str}) is *${to_symbol}${currentPrice}* (${to_str})`;
+		return `*${fromAmount_str}* (${from_str}) is *${to_symbol}${currentPrice}* (${to_str})`;
 	}
 
 	async response_btcChart(_opt) {
 		var opt = {
-			from	: 'btc',
-			to		: 'usd',
-			days	: 7,	// how many days to fetch
-			offset	: 0,	// how many days ago
+			fromAmount	: 1,
+			from		: 'btc',
+			to			: 'usd',
+			days		: 7,	// how many days to fetch
+			offset		: 0,	// how many days ago
 		};
 		opt = extend({}, opt, _opt);
 
@@ -96,7 +101,9 @@ class CryptoMessageHandler extends MessageHandler {
 
 		var historicalPrices_array = [];
 		for (const date in historicalPrices) {
-			const price = historicalPrices[date];
+			var price = historicalPrices[date];
+			price *= opt.fromAmount;	// Apply the specified amount
+			
 			historicalPrices_array.push({
 				type: 'normal',
 				date: date,
@@ -123,6 +130,8 @@ class CryptoMessageHandler extends MessageHandler {
 		});
 
 		var currentPrice = await currentPricePromise;
+		currentPrice *= opt.fromAmount;	// Apply the specified amount
+		
 		var date = btcPrice.dateToDateString(new Date());
 		//console.log('currentPrice', currentPrice);
 		historicalPrices_array.push({
